@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.rohithkankipati.Inventory.exception.ErrorResponse;
@@ -30,7 +31,27 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 			throws ServletException, IOException {
 		
+		String requestURI = request.getRequestURI();
+	    AntPathMatcher pathMatcher = new AntPathMatcher();
+	    
+	    if (pathMatcher.match("/api/users/**", requestURI) || pathMatcher.match("/products/**", requestURI)) {
+	    	filterChain.doFilter(request, response);
+	    	return;
+	    }
+		
 		 String header = request.getHeader("Authorization");
+		 
+		 if (header == null || !header.startsWith("Bearer ")) {
+		        logger.error("Missing or invalid Authorization header");
+
+		        response.setStatus(HttpStatus.UNAUTHORIZED.value());
+		        response.setContentType("application/json");
+		        
+		        ErrorResponse error = new ErrorResponse(HttpStatus.UNAUTHORIZED, "Missing or invalid Authorization header");
+		        response.getWriter().write(error.toString());
+		        return;
+		    }
+		 
 		    if (header != null && header.startsWith("Bearer ")) {
 		        String jwt = header.substring(7);
 		        String userIdString = request.getHeader("X-User-ID");
