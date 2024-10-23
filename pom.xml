@@ -118,6 +118,14 @@
 		        <groupId>org.springframework.boot</groupId>
 		        <artifactId>spring-boot-starter-data-elasticsearch</artifactId>
 		    </dependency>
+		    
+		    <!-- Elasticsearch Rest High-Level Client for both local and production -->
+			<dependency>
+			    <groupId>org.elasticsearch.client</groupId>
+			    <artifactId>elasticsearch-rest-high-level-client</artifactId>
+			    <version>7.10.2</version> <!-- Align with the Elasticsearch 7.10 version -->
+			</dependency>
+
 	</dependencies>
 
 

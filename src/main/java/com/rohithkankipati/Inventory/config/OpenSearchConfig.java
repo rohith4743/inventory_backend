@@ -40,11 +40,11 @@ public class OpenSearchConfig {
         // Build the OpenSearch client using credentials and endpoint
         OpenSearchClient client = OpenSearchClient.builder()
                 .region(Region.of("us-east-1")) // Set your AWS region
-                .endpointOverride(URI.create(env.getProperty("spring.elasticsearch.uris")))  // Use endpointOverride for the URI
+                .endpointOverride(URI.create(env.getProperty("spring.elasticsearch.uris"))) 
                 .credentialsProvider(StaticCredentialsProvider.create(
                         AwsBasicCredentials.create(username, password)
                 ))
-                .httpClient(ApacheHttpClient.builder().build())  // Optionally configure the HTTP client
+                .httpClient(ApacheHttpClient.builder().build()) 
                 .build();
 
         return client;
