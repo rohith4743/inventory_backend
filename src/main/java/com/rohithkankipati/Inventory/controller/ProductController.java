@@ -1,17 +1,23 @@
 package com.rohithkankipati.Inventory.controller;
 
-import java.util.List;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.rohithkankipati.Inventory.dto.ProductCardDTO;
+import com.rohithkankipati.Inventory.dto.PaginatedResponseDTO;
 import com.rohithkankipati.Inventory.service.ProductService;
 
 @CrossOrigin
@@ -22,8 +28,28 @@ public class ProductController {
 	@Autowired
     private ProductService productService;
 	
+	private Pageable createPageRequest(int page, int sizePerPage, String sortBy) {
+	    Sort sort;
+	    
+	    switch (sortBy.toLowerCase()) {
+	        case "price_low_to_high":
+	            sort = Sort.by(Sort.Direction.ASC, "price");
+	            break;
+	        case "price_high_to_low":
+	            sort = Sort.by(Sort.Direction.DESC, "price");
+	            break;
+	        case "name":
+	        default:
+	            sort = Sort.by(Sort.Direction.ASC, "name");
+	            break;
+	    }
+	    
+	    return PageRequest.of(page, sizePerPage, sort);
+	}
+
+	
 	@GetMapping
-    public List<ProductCardDTO> getCombinedProducts(
+    public PaginatedResponseDTO getCombinedProducts(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String category,
             @RequestParam(required = false) String subcategory,
@@ -36,9 +62,10 @@ public class ProductController {
             @RequestParam(required = false) String regionOrigin,
             @RequestParam(required = false) Boolean onSale,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int sizePerPage) {
+            @RequestParam(defaultValue = "10") int sizePerPage,
+            @RequestParam(defaultValue = "name") String sortBy) {
 
-        Pageable pageable = PageRequest.of(page, sizePerPage);
+		Pageable pageable = createPageRequest(page, sizePerPage, sortBy);
         return productService.getProducts(keyword, category, subcategory, minPrice, maxPrice,
                 minABV, maxABV, size, packSize, regionOrigin, pageable);
     }
@@ -49,12 +76,22 @@ public class ProductController {
 //        return productService.getAllProducts();
 //    }
 //
-//    @GetMapping("/{id}")
-//    public ResponseEntity<Product> getProductById(@PathVariable Integer id) {
-//        return productService.getProductById(id)
-//                .map(ResponseEntity::ok)
-//                .orElse(ResponseEntity.notFound().build());
-//    }
+    @GetMapping("/{id}")
+    public ResponseEntity<Map<String, Object>> getProductById(@PathVariable Integer id) {
+        
+    	try {
+    		
+    		Map<String, Object> response = productService.getProductById(id);
+    		return new ResponseEntity<Map<String,Object>>(response, HttpStatus.OK);
+        } catch (Exception e) {
+        	
+        	Map<String, Object> response = new HashMap<>();
+        	response.put("error", e);
+        	return new ResponseEntity<Map<String,Object>>(response, HttpStatus.BAD_REQUEST);
+        	
+        }
+                
+    }
 //
 //    @PostMapping
 //    public Product addProduct(@RequestBody Product product) {
