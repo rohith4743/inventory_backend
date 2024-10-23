@@ -1,17 +1,16 @@
 package com.rohithkankipati.Inventory.config;
 
+import org.apache.http.HttpHost;
+import org.apache.http.message.BasicHeader;
+import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.Profiles;
-import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
-import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
-import software.amazon.awssdk.regions.Region;
-import software.amazon.awssdk.services.opensearch.OpenSearchClient;
-import software.amazon.awssdk.http.apache.ApacheHttpClient;
 
-import java.net.URI;
+import java.util.Base64;
 
 @Configuration
 public class OpenSearchConfig {
@@ -23,7 +22,7 @@ public class OpenSearchConfig {
     private ParameterStoreService parameterStoreService;
 
     @Bean
-    public OpenSearchClient openSearchClient() {
+    public RestHighLevelClient openSearchClient() {
         String username;
         String password;
 
@@ -37,19 +36,19 @@ public class OpenSearchConfig {
             password = env.getProperty("spring.elasticsearch.password");
         }
 
-        // Build the OpenSearch client using credentials and endpoint
-        OpenSearchClient client = OpenSearchClient.builder()
-                .region(Region.of("us-east-1")) // Set your AWS region
-                .endpointOverride(URI.create(env.getProperty("spring.elasticsearch.uris"))) 
-                .credentialsProvider(StaticCredentialsProvider.create(
-                        AwsBasicCredentials.create(username, password)
-                ))
-                .httpClient(ApacheHttpClient.builder().build()) 
-                .build();
+        // Build the Elasticsearch RestHighLevelClient for AWS Elasticsearch or local
+        return new RestHighLevelClient(
+                RestClient.builder(
+                        new HttpHost(env.getProperty("spring.elasticsearch.uris"), 443, "https")
+                ).setDefaultHeaders(new BasicHeader[]{
+                        new BasicHeader("Authorization", createBasicAuthHeader(username, password))
+                })
+        );
+    }
 
-        return client;
+    // Helper method to create the Authorization header for basic auth
+    private String createBasicAuthHeader(String username, String password) {
+        String auth = username + ":" + password;
+        return "Basic " + Base64.getEncoder().encodeToString(auth.getBytes());
     }
 }
-
-
-
