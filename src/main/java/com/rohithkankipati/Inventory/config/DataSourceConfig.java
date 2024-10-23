@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 
 import javax.sql.DataSource;
@@ -22,8 +23,8 @@ public class DataSourceConfig {
         String username;
         String password;
 
-        // If the active profile is 'prod', fetch secrets from AWS Systems Manager
-        if (env.acceptsProfiles("prod") && parameterStoreService != null) {
+        // Check if 'prod' profile is active using the non-deprecated method
+        if (env.acceptsProfiles(Profiles.of("prod")) && parameterStoreService != null) {
             username = parameterStoreService.getParameter(env.getProperty("aws.ssm.postgres.username"));
             password = parameterStoreService.getParameter(env.getProperty("aws.ssm.postgres.password"));
         } else {
@@ -40,4 +41,5 @@ public class DataSourceConfig {
                 .build();
     }
 }
+
 
