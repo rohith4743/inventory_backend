@@ -99,13 +99,6 @@
 		        <version>2.20.0</version>
 		    </dependency>
 		
-		    <!-- OpenSearch SDK -->
-		    <dependency>
-		        <groupId>software.amazon.awssdk</groupId>
-		        <artifactId>opensearch</artifactId>
-		        <version>2.20.5</version>
-		    </dependency>
-		
 		    <!-- Apache HTTP Client for AWS SDK -->
 		    <dependency>
 		        <groupId>software.amazon.awssdk</groupId>
@@ -113,11 +106,12 @@
 		        <version>2.20.5</version>
 		    </dependency>
 		
-		    <!-- Spring Data Elasticsearch -->
 		    <dependency>
-		        <groupId>org.springframework.boot</groupId>
-		        <artifactId>spring-boot-starter-data-elasticsearch</artifactId>
-		    </dependency>
+			    <groupId>org.springframework.data</groupId>
+			    <artifactId>spring-data-elasticsearch</artifactId>
+			   
+			</dependency>
+
 		    
 		    <!-- Elasticsearch Rest High-Level Client for both local and production -->
 			<dependency>
