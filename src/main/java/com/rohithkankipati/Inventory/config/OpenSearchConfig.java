@@ -36,12 +36,13 @@ public class OpenSearchConfig {
             password = env.getProperty("spring.elasticsearch.password");
         }
 
-        // Build the Elasticsearch RestHighLevelClient for AWS Elasticsearch or local
+        // Build the Elasticsearch RestHighLevelClient for AWS OpenSearch or local
         return new RestHighLevelClient(
                 RestClient.builder(
                         new HttpHost(env.getProperty("spring.elasticsearch.uris"), 443, "https")
                 ).setDefaultHeaders(new BasicHeader[]{
-                        new BasicHeader("Authorization", createBasicAuthHeader(username, password))
+                        new BasicHeader("Authorization", createBasicAuthHeader(username, password)),
+                        new BasicHeader("Content-Type", "application/json") // Set Content-Type to application/json for compatibility
                 })
         );
     }
