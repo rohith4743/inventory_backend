@@ -3,7 +3,6 @@ package com.rohithkankipati.Inventory.config;
 import org.apache.http.HttpHost;
 import org.apache.http.message.BasicHeader;
 import org.elasticsearch.client.RestClient;
-import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -23,7 +22,6 @@ public class OpenSearchConfig {
     @Autowired(required = false)
     private ParameterStoreService parameterStoreService;
 
-    // Create RestHighLevelClient bean for backward compatibility with Spring Data Elasticsearch 7.x
     @Bean
     public RestHighLevelClient openSearchClient() {
         String username;
@@ -39,20 +37,21 @@ public class OpenSearchConfig {
             password = env.getProperty("spring.elasticsearch.password");
         }
 
-        RestClientBuilder builder = RestClient.builder(
-                new HttpHost(env.getProperty("spring.elasticsearch.uris"), 443, "https")
-        ).setDefaultHeaders(new BasicHeader[]{
-                new BasicHeader("Authorization", createBasicAuthHeader(username, password)),
-                new BasicHeader("Content-Type", "application/json") // Set Content-Type to application/json for compatibility
-        });
-
-        return new RestHighLevelClient(builder);
+        // Build the Elasticsearch RestHighLevelClient for AWS OpenSearch or local
+        return new RestHighLevelClient(
+                RestClient.builder(
+                        new HttpHost(env.getProperty("spring.elasticsearch.uris"), 443, "https")
+                ).setDefaultHeaders(new BasicHeader[]{
+                        new BasicHeader("Authorization", createBasicAuthHeader(username, password)),
+                        new BasicHeader("Content-Type", "application/json") // Set Content-Type to application/json for compatibility
+                })
+        );
     }
 
-    // Create ElasticsearchRestTemplate bean to replace deprecated ElasticsearchTemplate
+    // Bean definition for ElasticsearchRestTemplate to resolve the missing bean issue
     @Bean
-    public ElasticsearchRestTemplate elasticsearchRestTemplate() {
-        return new ElasticsearchRestTemplate(openSearchClient());
+    public ElasticsearchRestTemplate elasticsearchTemplate(RestHighLevelClient client) {
+        return new ElasticsearchRestTemplate(client);
     }
 
     // Helper method to create the Authorization header for basic auth
