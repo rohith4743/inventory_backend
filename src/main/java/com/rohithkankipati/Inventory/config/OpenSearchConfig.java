@@ -3,12 +3,14 @@ package com.rohithkankipati.Inventory.config;
 import org.apache.http.HttpHost;
 import org.apache.http.message.BasicHeader;
 import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.Profiles;
+import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
 
 import java.util.Base64;
 
@@ -21,6 +23,7 @@ public class OpenSearchConfig {
     @Autowired(required = false)
     private ParameterStoreService parameterStoreService;
 
+    // Create RestHighLevelClient bean for backward compatibility with Spring Data Elasticsearch 7.x
     @Bean
     public RestHighLevelClient openSearchClient() {
         String username;
@@ -36,15 +39,20 @@ public class OpenSearchConfig {
             password = env.getProperty("spring.elasticsearch.password");
         }
 
-        // Build the Elasticsearch RestHighLevelClient for AWS OpenSearch or local
-        return new RestHighLevelClient(
-                RestClient.builder(
-                        new HttpHost(env.getProperty("spring.elasticsearch.uris"), 443, "https")
-                ).setDefaultHeaders(new BasicHeader[]{
-                        new BasicHeader("Authorization", createBasicAuthHeader(username, password)),
-                        new BasicHeader("Content-Type", "application/json") // Set Content-Type to application/json for compatibility
-                })
-        );
+        RestClientBuilder builder = RestClient.builder(
+                new HttpHost(env.getProperty("spring.elasticsearch.uris"), 443, "https")
+        ).setDefaultHeaders(new BasicHeader[]{
+                new BasicHeader("Authorization", createBasicAuthHeader(username, password)),
+                new BasicHeader("Content-Type", "application/json") // Set Content-Type to application/json for compatibility
+        });
+
+        return new RestHighLevelClient(builder);
+    }
+
+    // Create ElasticsearchRestTemplate bean to replace deprecated ElasticsearchTemplate
+    @Bean
+    public ElasticsearchRestTemplate elasticsearchRestTemplate() {
+        return new ElasticsearchRestTemplate(openSearchClient());
     }
 
     // Helper method to create the Authorization header for basic auth
